@@ -1,0 +1,12 @@
+rs: 0
+di: lpb
+ln: cb
+or: r
+ex: lg
+"*.csv": ligr
+"*.json": ligr
+"*.sql": ligr
+"*.yaml": ligr
+"*.exe": lg
+".java": lr
+".class": lr
