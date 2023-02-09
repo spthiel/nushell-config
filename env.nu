@@ -102,7 +102,7 @@ let-env NU_PLUGIN_DIRS = [
 ]
 
 # To add entries to PATH (on Windows you might use Path), you can use the following pattern:
-# let-env PATH = ($env.PATH | split row (char esep) | prepend '/some/path')
+let-env PATH = ($env.PATH | split row (char esep) | | append (open ($nu.config-path | path dirname | path join "path") | lines))
 
 def convertcolor [$color] {
     let converted = (do -i {ansi $color});
@@ -120,3 +120,5 @@ def grablscolors [] {
 }
 
 let-env LS_COLORS = grablscolors
+
+source modules/_index.nu
