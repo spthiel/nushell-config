@@ -102,6 +102,7 @@ let-env NU_PLUGIN_DIRS = [
 ]
 
 # To add entries to PATH (on Windows you might use Path), you can use the following pattern:
+touch ($nu.config-path | path dirname | path join "path")
 let-env PATH = ($env.PATH | split row (char esep) | | append (open ($nu.config-path | path dirname | path join "path") | lines))
 
 def convertcolor [$color] {
@@ -121,4 +122,37 @@ def grablscolors [] {
 
 let-env LS_COLORS = grablscolors
 
-source modules/_index.nu
+source .config/nushell/modules/_index.nu
+
+# DDev jump
+def "nu-complete ddev-jump" [] {
+    ddev list -j | from json | get raw.name
+}
+
+def-env @ [project: string@"nu-complete ddev-jump"] {
+    let ddev = (do -i {ddev describe $project -j} | complete | get stdout | str trim)
+    let span = (metadata $project).span
+    if ($ddev == "") {
+        error make -u {
+            msg: "Invalid project",
+            label: {
+                text: "Project doesnt exist",
+                start: $span.start,
+                end: $span.end
+            }
+        }
+    }
+    cd ($ddev | from json | get raw  | get approot)
+}
+
+# QR Code Scan
+def-env scanqr [] {
+    mut out = [];
+    while true {
+        let new = (import -silent -window root bmp:- | zbarimg - -q -Sposition=false | lines | each {|it| let idx = ($it | str index-of ":");$it | str substring $"($idx + 1)," })
+        $out = ($out | prepend $new | uniq)
+        clear;
+        print ($out | each {|it| if ($new | any {|itnew| $itnew == $it}) {$"(ansi lg)($it)"} else {$"(ansi lr)($it)"} })
+        sleep 1sec;
+    }
+}
