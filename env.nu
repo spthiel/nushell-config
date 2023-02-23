@@ -122,7 +122,8 @@ def grablscolors [] {
 
 let-env LS_COLORS = grablscolors
 
-source .config/nushell/modules/_index.nu
+# const indexFile = ($nu.config-path | path dirname | path join "modules" "_index.nu")
+# source $indexFilenu
 
 # DDev jump
 def "nu-complete ddev-jump" [] {
