@@ -157,3 +157,11 @@ def-env scanqr [] {
         sleep 1sec;
     }
 }
+
+def-env fuck [] {
+    let-env TF_ALIAS = "fuck";
+    let-env PYTHONIOENCODING = "utf-8";
+    thefuck (history | last | get "command") | save /tmp/fuck.nu;
+    nu /tmp/fuck.nu;
+    rm /tmp/fuck.nu;
+}
