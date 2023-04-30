@@ -6,7 +6,7 @@ def create_left_prompt [] {
     let host = (sys | get host.hostname)
     let dirPath = ($env.PWD | str replace $env.HOME "~" )
 
-    let pathSegments = if (env | any {|$it| $it.name == PROMPT_PATH_SEGMENTS}) {$env.PROMPT_PATH_SEGMENTS} else {3}
+    let pathSegments = if ($env | columns | any {|$it| $it == "PROMPT_PATH_SEGMENTS"}) {$env.PROMPT_PATH_SEGMENTS} else {3}
 
     let splittedPath = ($dirPath | split row "/" )
     let path = ($splittedPath | last $pathSegments | str collect "/")
@@ -190,10 +190,7 @@ def-env scanqr [] {
 def-env fuck [] {
     let-env TF_ALIAS = "fuck";
     let-env PYTHONIOENCODING = "utf-8";
-    let command = (history | last | get "command");
-    echo $command;
-    let newCommand = (thefuck $command);
-    echo $newCommand;
-    ^$newCommand
+    thefuck (history | last | get "command") | save /tmp/fuck.nu;
+    nu /tmp/fuck.nu;
+    rm /tmp/fuck.nu;
 }
-
