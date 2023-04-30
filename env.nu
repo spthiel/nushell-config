@@ -13,7 +13,7 @@ def create_left_prompt [] {
     let pathSegments = if ($env | columns | any {|$it| $it == "PROMPT_PATH_SEGMENTS"}) {$env.PROMPT_PATH_SEGMENTS} else {3}
 
     let splittedPath = ($dirPath | split row "/" )
-    let path = ($splittedPath | last $pathSegments | str collect "/")
+    let path = ($splittedPath | last $pathSegments | str join "/")
 
     let path = if ($splittedPath | last $pathSegments | get 0) != "~" {
         "/" + $path
@@ -79,7 +79,7 @@ def create_git [] {
 def create_right_prompt [] {
     let time_segment = ([
         (date now | date format '%r')
-    ] | str collect)
+    ] | str join)
 
     let line = $"($time_segment)"
     let bottomLine = []
@@ -88,7 +88,7 @@ def create_right_prompt [] {
         $"($line) (ansi rb)($env.LAST_EXIT_CODE) ↲"
     } else {$line}
 
-    $line | str collect
+    $line | str join
 }
 
 # Use nushell functions to define your right and left prompt
