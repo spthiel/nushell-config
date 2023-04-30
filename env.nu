@@ -1,5 +1,9 @@
 # Nushell Environment Config File
 
+let-env LC_ALL = "en_US.UTF-8"
+
+let-env HOSTNAME = (sys | get host.hostname)
+
 def create_left_prompt [] {
 
     let user = ($env.USER)
@@ -22,10 +26,36 @@ def create_left_prompt [] {
 
     let userhost = ($"(ansi lyb)($user)@($host)")
 
-    let topLine = $"(ansi white)╭─╴($userhost) (ansi ly)($path)(ansi white) " + (create_git)
+    let topLine = $"(ansi white)╭─╴($userhost) (ansi ly)($path)(ansi white) " + (create_git) + " " + (createDDev)
     let bottomLine = $"(ansi wb)╰─"
 
     $"($topLine)\n($bottomLine)"
+}
+
+def createDDev [] {
+    let ddev = (do -i {ddev status -j} | complete | get stdout | str trim | from json)
+    let out = if ($ddev | is-empty) {
+        ""
+    } else {
+        let ddev = ($ddev | get raw)
+        let url = ($ddev | get httpsURLs | where $it =~ ($env.HOSTNAME))
+        let url = if ($url | is-empty) {
+            $ddev | get httpsURLs | get 0
+        } else {
+            $url | get 0
+        }
+        let dbPort = ($ddev | get -i dbinfo.published_port)
+        let dbPort = if ($dbPort | is-empty) {
+            "none"
+        } else {
+            $dbPort
+        }
+        let nodeVersion = ($ddev | get nodejs_version)
+        let phpVersion = ($ddev | get php_version)
+
+        $" (ansi lp)<($url) DB:($dbPort) Node@($nodeVersion) Php@($phpVersion)>"
+    }
+    $out
 }
 
 def create_git [] {
