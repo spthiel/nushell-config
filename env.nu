@@ -146,6 +146,35 @@ def-env @ [project: string@"nu-complete ddev-jump"] {
     cd ($ddev | from json | get raw  | get approot)
 }
 
+def-env "docker ps" [
+    --all (-a):bool     # Show all containers (default just shows running)
+    --filter (-f)       # Filter output based on conditions provided
+    --format:string     # Pretty-print containers using a Go template
+    --last (-n):int     # Show n last created containers (includes all states) (default -1)
+    --latest (-l):bool  # Show the latest created container (includes all states)
+    --quiet (-q):bool   # Only display container IDs
+    --size (-s):bool    # Display total file sizes
+] {
+    let $flags = ""
+    let $flags = if ($all) { $"($flags) -a" } else { $flags }
+    let $flags = if ($filter) { $"($flags) -f ($filter)" } else { $flags }
+    let $flags = if (not ($format | is-empty)) { $"($flags) --format ($format)" } else { $flags }
+    let $flags = if (not ($last | is-empty)) { $"($flags) -n ($last)"} else { $flags }
+    let $flags = if ($latest) { $"($flags) -l" } else { $flags }
+    let $flags = if ($quiet) { $"($flags) -q" } else { $flags }
+    let $flags = if ($size) { $"($flags) -s" } else { $flags }
+    let $flags = ($flags | str trim);
+    if ($flags != "") {
+        ^docker ps ($flags | split row " ") | from ssv -a;
+    } else {
+        ^docker ps | from ssv -a
+    }
+}
+
+def-env dps [] {
+    ^docker ps -a | from ssv -a
+}
+
 # QR Code Scan
 def-env scanqr [] {
     mut out = [];
@@ -157,3 +186,14 @@ def-env scanqr [] {
         sleep 1sec;
     }
 }
+
+def-env fuck [] {
+    let-env TF_ALIAS = "fuck";
+    let-env PYTHONIOENCODING = "utf-8";
+    let command = (history | last | get "command");
+    echo $command;
+    let newCommand = (thefuck $command);
+    echo $newCommand;
+    ^$newCommand
+}
+
