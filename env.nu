@@ -148,12 +148,14 @@ def-env @ [project: string@"nu-complete ddev-jump"] {
 
 # QR Code Scan
 def-env scanqr [] {
+    clear;
     mut out = [];
     while true {
         let new = (import -silent -window root bmp:- | zbarimg - -q -Sposition=false | lines | each {|it| let idx = ($it | str index-of ":");$it | str substring $"($idx + 1)," })
         $out = ($out | prepend $new | uniq)
-        clear;
-        print ($out | each {|it| if ($new | any {|itnew| $itnew == $it}) {$"(ansi lg)($it)"} else {$"(ansi lr)($it)"} })
+        let echo = ($out | each {|it| if ($new | any {|itnew| $itnew == $it}) {$"(ansi lg)($it)"} else {$"(ansi lr)($it)"} })
+        print $echo
+	echo "\e[0;0f"
         sleep 1sec;
     }
 }
