@@ -1,5 +1,9 @@
 # Nushell Environment Config File
 
+let-env LC_ALL = "en_US.UTF-8"
+
+let-env HOSTNAME = (sys | get host.hostname)
+
 def create_left_prompt [] {
 
     let user = ($env.USER)
@@ -9,7 +13,7 @@ def create_left_prompt [] {
     let pathSegments = if ($env | columns | any {|$it| $it == "PROMPT_PATH_SEGMENTS"}) {$env.PROMPT_PATH_SEGMENTS} else {3}
 
     let splittedPath = ($dirPath | split row "/" )
-    let path = ($splittedPath | last $pathSegments | str collect "/")
+    let path = ($splittedPath | last $pathSegments | str join "/")
 
     let path = if ($splittedPath | last $pathSegments | get 0) != "~" {
         "/" + $path
@@ -22,10 +26,36 @@ def create_left_prompt [] {
 
     let userhost = ($"(ansi lyb)($user)@($host)")
 
-    let topLine = $"(ansi white)╭─╴($userhost) (ansi ly)($path)(ansi white) " + (create_git)
+    let topLine = $"(ansi white)╭─╴($userhost) (ansi ly)($path)(ansi white) " + (create_git) + " " + (createDDev)
     let bottomLine = $"(ansi wb)╰─"
 
     $"($topLine)\n($bottomLine)"
+}
+
+def createDDev [] {
+    let ddev = (do -i {ddev status -j} | str trim | from json)
+    let out = if ($ddev | is-empty) {
+        ""
+    } else {
+        let ddev = ($ddev | get raw)
+        let url = ($ddev | get httpsURLs | where $it =~ ($env.HOSTNAME))
+        let url = if ($url | is-empty) {
+            $ddev | get httpsURLs | get 0
+        } else {
+            $url | get 0
+        }
+        let dbPort = ($ddev | get -i dbinfo.published_port)
+        let dbPort = if ($dbPort | is-empty) {
+            "none"
+        } else {
+            $dbPort
+        }
+        let nodeVersion = ($ddev | get nodejs_version)
+        let phpVersion = ($ddev | get php_version)
+
+        $" (ansi lp)<($url) DB:($dbPort) Node@($nodeVersion) Php@($phpVersion)>"
+    }
+    $out
 }
 
 def create_git [] {
@@ -49,7 +79,7 @@ def create_git [] {
 def create_right_prompt [] {
     let time_segment = ([
         (date now | date format '%r')
-    ] | str collect)
+    ] | str join)
 
     let line = $"($time_segment)"
     let bottomLine = []
@@ -58,7 +88,7 @@ def create_right_prompt [] {
         $"($line) (ansi rb)($env.LAST_EXIT_CODE) ↲"
     } else {$line}
 
-    $line | str collect
+    $line | str join
 }
 
 # Use nushell functions to define your right and left prompt
@@ -144,6 +174,35 @@ def-env @ [project: string@"nu-complete ddev-jump"] {
         }
     }
     cd ($ddev | from json | get raw  | get approot)
+}
+
+def-env "docker ps" [
+    --all (-a):bool     # Show all containers (default just shows running)
+    --filter (-f)       # Filter output based on conditions provided
+    --format:string     # Pretty-print containers using a Go template
+    --last (-n):int     # Show n last created containers (includes all states) (default -1)
+    --latest (-l):bool  # Show the latest created container (includes all states)
+    --quiet (-q):bool   # Only display container IDs
+    --size (-s):bool    # Display total file sizes
+] {
+    let $flags = ""
+    let $flags = if ($all) { $"($flags) -a" } else { $flags }
+    let $flags = if ($filter) { $"($flags) -f ($filter)" } else { $flags }
+    let $flags = if (not ($format | is-empty)) { $"($flags) --format ($format)" } else { $flags }
+    let $flags = if (not ($last | is-empty)) { $"($flags) -n ($last)"} else { $flags }
+    let $flags = if ($latest) { $"($flags) -l" } else { $flags }
+    let $flags = if ($quiet) { $"($flags) -q" } else { $flags }
+    let $flags = if ($size) { $"($flags) -s" } else { $flags }
+    let $flags = ($flags | str trim);
+    if ($flags != "") {
+        ^docker ps ($flags | split row " ") | from ssv -a;
+    } else {
+        ^docker ps | from ssv -a
+    }
+}
+
+def-env dps [] {
+    ^docker ps -a | from ssv -a
 }
 
 # QR Code Scan

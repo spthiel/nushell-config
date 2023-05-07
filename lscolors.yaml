@@ -3,10 +3,15 @@ di: lpb
 ln: cb
 or: r
 ex: lg
+
 "*.csv": ligr
 "*.json": ligr
 "*.sql": ligr
 "*.yaml": ligr
+"*.xml": ligr
+"*.conf": ligr
+
 "*.exe": lg
+"*.nu": lg
 ".java": lr
 ".class": lr
