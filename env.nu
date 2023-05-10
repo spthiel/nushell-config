@@ -222,7 +222,7 @@ def-env scanqr [] {
 def-env fuck [] {
     let-env TF_ALIAS = "fuck";
     let-env PYTHONIOENCODING = "utf-8";
-    thefuck (history | last | get "command") | save /tmp/fuck.nu;
+    thefuck (history | last | get "command") | save -f /tmp/fuck.nu;
     nu /tmp/fuck.nu;
     rm /tmp/fuck.nu;
 }
