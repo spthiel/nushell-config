@@ -16,8 +16,13 @@ def create_left_prompt [] {
     let path = ($splittedPath | last $pathSegments | str join "/")
 
     let path = if ($splittedPath | last $pathSegments | get 0) != "~" {
-        "/" + $path
+	if ($path | str starts-with "/") {
+            $path
+        } else {
+            "/" + $path
+        }
     } else {$path}
+
     let path = if ($splittedPath | length) > $pathSegments {
         "⇜" + $path
     } else {$path}
@@ -26,7 +31,7 @@ def create_left_prompt [] {
 
     let userhost = ($"(ansi lyb)($user)@($host)")
 
-    let topLine = $"(ansi white)╭─╴($userhost) (ansi ly)($path)(ansi white) " + (create_git) + " " + (createDDev)
+    let topLine = $"(ansi wb)╭─╴($userhost) (ansi ly)($path)(ansi white) " + (create_git) + " " + (createDDev)
     let bottomLine = $"(ansi wb)╰─"
 
     $"($topLine)\n($bottomLine)"
@@ -210,7 +215,7 @@ def-env scanqr [] {
     clear;
     mut out = [];
     while true {
-        let new = (import -silent -window root bmp:- | zbarimg - -q -Sposition=false | lines | each {|it| let idx = ($it | str index-of ":");$it | str substring $"($idx + 1)," })
+        let new = (import -silent -window root bmp:- | zbarimg - -q -Sposition=false | lines | each {|it| let idx = ($it | str index-of ":");$it | str substring ($idx + 1).. })
         $out = ($out | prepend $new | uniq)
         let echo = ($out | each {|it| if ($new | any {|itnew| $itnew == $it}) {$"(ansi lg)($it)"} else {$"(ansi lr)($it)"} })
         print $echo
