@@ -83,7 +83,7 @@ def create_git [] {
 
 def create_right_prompt [] {
     let time_segment = ([
-        (date now | date format '%r')
+        (date now | format date '%r')
     ] | str join)
 
     let line = $"($time_segment)"
@@ -165,7 +165,7 @@ def "nu-complete ddev-jump" [] {
     ddev list -j | from json | get raw.name
 }
 
-def-env @ [project: string@"nu-complete ddev-jump"] {
+def --env @ [project: string@"nu-complete ddev-jump"] {
     let ddev = (do -i {ddev describe $project -j} | complete | get stdout | str trim)
     let span = (metadata $project).span
     if ($ddev == "") {
@@ -181,14 +181,14 @@ def-env @ [project: string@"nu-complete ddev-jump"] {
     cd ($ddev | from json | get raw  | get approot)
 }
 
-def-env "docker ps" [
-    --all (-a):bool     # Show all containers (default just shows running)
-    --filter (-f)       # Filter output based on conditions provided
-    --format:string     # Pretty-print containers using a Go template
-    --last (-n):int     # Show n last created containers (includes all states) (default -1)
-    --latest (-l):bool  # Show the latest created container (includes all states)
-    --quiet (-q):bool   # Only display container IDs
-    --size (-s):bool    # Display total file sizes
+def --env "docker ps" [
+    --all (-a)           # Show all containers (default just shows running)
+    --filter (-f):string # Filter output based on conditions provided
+    --format:string      # Pretty-print containers using a Go template
+    --last (-n):int      # Show n last created containers (includes all states) (default -1)
+    --latest (-l)        # Show the latest created container (includes all states)
+    --quiet (-q)         # Only display container IDs
+    --size (-s)          # Display total file sizes
 ] {
     let $flags = ""
     let $flags = if ($all) { $"($flags) -a" } else { $flags }
@@ -206,12 +206,12 @@ def-env "docker ps" [
     }
 }
 
-def-env dps [] {
+def --env dps [] {
     ^docker ps -a | from ssv -a
 }
 
 # QR Code Scan
-def-env scanqr [] {
+def --env scanqr [] {
     clear;
     mut out = [];
     while true {
@@ -224,10 +224,51 @@ def-env scanqr [] {
     }
 }
 
-def-env fuck [] {
+def --env fuck [] {
     $env.TF_ALIAS = "fuck";
     $env.PYTHONIOENCODING = "utf-8";
     thefuck (history | last | get "command") | save -f /tmp/fuck.nu;
     nu /tmp/fuck.nu;
     rm /tmp/fuck.nu;
+}
+
+def --env cve [
+  --ticket (-t): string # Override ticket number
+] {
+    if (not ("gradlew" | path exists)) {
+        error make {
+           msg: "Not in project root"
+        };
+    }
+    let ticketNumber = if ($ticket | is-empty) {
+        git branch --show-current 
+            | parse -r "(?<ticket>EAC-\\d+)" 
+            | get ticket.0;
+    } else {
+        if ($ticket | str starts-with "EAC") {
+            $ticket;
+        } else {
+            $"EAC-($ticket)";
+        }
+    }
+    
+    print $"Description of ticket ($ticketNumber):";
+    let description = (input);
+
+    if (($description | is-empty) or ($description == "exit")) {
+    } else {
+
+        let history = {
+            id: $ticketNumber,
+            date: (date now | format date "%Y-%m-%d"),
+            tags: [],
+            changeDesc: $description
+        };
+
+        echo (["history" (date now | format date "%Y") (date now | format date "%m") $"($ticketNumber).json"] | path join);
+
+        $history 
+            | save (["history" (date now | format date "%Y") (date now | format date "%m") $"($ticketNumber).json"] | path join);
+    }
+
 }
