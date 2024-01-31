@@ -11,6 +11,6 @@ $env.config.color_config.shape_string = lh;
 
 $env.config.show_banner = false;
 $env.config.table.mode = "compact";
-$env.config.history.sync_on_enter = false;
+$env.config.history.sync_on_enter = true;
 $env.config.completions.external.enable = true;
 $env.config.shell_integration = true;
