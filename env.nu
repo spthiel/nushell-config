@@ -272,3 +272,6 @@ def --env cve [
     }
 
 }
+
+alias cd = z
+alias cdi = zi
