@@ -38,7 +38,7 @@ def create_left_prompt [] {
 }
 
 def createDDev [] {
-    let ddev = (do -i {ddev status -j} | str trim | from json)
+    let ddev = (do -i {ddev status -j err> /dev/null} | str trim | from json)
     let out = if ($ddev | is-empty) {
         ""
     } else {
@@ -272,6 +272,3 @@ def --env cve [
     }
 
 }
-
-alias cd = z
-alias cdi = zi
