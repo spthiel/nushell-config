@@ -7,7 +7,10 @@ $env.HOSTNAME = (sys host | get hostname)
 def create_left_prompt [] {
 
     let user = ($env.USER)
-    let host = (sys host | get hostname)
+    mut host = (sys host | get hostname)
+    if (($env | get "OBFUSCATE_HOST" -i) == "true") {
+        $host = ($host | str replace -ar "." "#")
+    }
     let dirPath = ($env.PWD | str replace $env.HOME "~" )
 
     let pathSegments = if ($env | columns | any {|$it| $it == "PROMPT_PATH_SEGMENTS"}) {$env.PROMPT_PATH_SEGMENTS} else {3}
@@ -274,4 +277,14 @@ def --env cve [
             | save (["history" (date now | format date "%Y") (date now | format date "%m") $"($ticketNumber).json"] | path join);
     }
 
+}
+
+def --env hidehost [
+ --not (-n)
+] {
+    if ($not) {
+        $env.OBFUSCATE_HOST = ""
+    } else {
+        $env.OBFUSCATE_HOST = "true"
+    }
 }
