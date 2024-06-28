@@ -13,6 +13,14 @@ $env.config.show_banner = false;
 $env.config.table.mode = "compact";
 $env.config.history.sync_on_enter = true;
 $env.config.completions.external.enable = true;
-$env.config.shell_integration = true;
+$env.config.shell_integration = {
+        osc2: false
+        osc7: false
+        osc8: false
+        osc9_9: false
+        osc133: false
+        osc633: false
+        reset_application_mode: false
+    };
 
 source ~/.zoxide.nu

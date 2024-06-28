@@ -2,12 +2,12 @@
 
 $env.LC_ALL = "en_US.UTF-8"
 
-$env.HOSTNAME = (sys | get host.hostname)
+$env.HOSTNAME = (sys host | get hostname)
 
 def create_left_prompt [] {
 
     let user = ($env.USER)
-    let host = (sys | get host.hostname)
+    let host = (sys host | get hostname)
     let dirPath = ($env.PWD | str replace $env.HOME "~" )
 
     let pathSegments = if ($env | columns | any {|$it| $it == "PROMPT_PATH_SEGMENTS"}) {$env.PROMPT_PATH_SEGMENTS} else {3}
@@ -227,9 +227,12 @@ def --env scanqr [] {
 def --env fuck [] {
     $env.TF_ALIAS = "fuck";
     $env.PYTHONIOENCODING = "utf-8";
-    thefuck (history | last | get "command") | save -f /tmp/fuck.nu;
-    nu /tmp/fuck.nu;
-    rm /tmp/fuck.nu;
+    let res = thefuck (history | last | get "command");
+    if (not ($res | is-empty)) {
+        $res | save -f /tmp/fuck.nu;
+        nu /tmp/fuck.nu;
+        rm /tmp/fuck.nu;
+    }
 }
 
 def --env cve [
