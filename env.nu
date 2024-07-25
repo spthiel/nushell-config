@@ -288,3 +288,5 @@ def --env hidehost [
         $env.OBFUSCATE_HOST = "true"
     }
 }
+
+source local-env.nu
