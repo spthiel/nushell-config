@@ -195,7 +195,7 @@ def --env "docker ps" [
 ] {
     let $flags = ""
     let $flags = if ($all) { $"($flags) -a" } else { $flags }
-    let $flags = if ($filter) { $"($flags) -f ($filter)" } else { $flags }
+    let $flags = if (not ($filter | is-empty)) { $"($flags) -f ($filter)" } else { $flags }
     let $flags = if (not ($format | is-empty)) { $"($flags) --format ($format)" } else { $flags }
     let $flags = if (not ($last | is-empty)) { $"($flags) -n ($last)"} else { $flags }
     let $flags = if ($latest) { $"($flags) -l" } else { $flags }
@@ -203,7 +203,7 @@ def --env "docker ps" [
     let $flags = if ($size) { $"($flags) -s" } else { $flags }
     let $flags = ($flags | str trim);
     if ($flags != "") {
-        ^docker ps ($flags | split row " ") | from ssv -a;
+        ^docker ps $flags | from ssv -a;
     } else {
         ^docker ps | from ssv -a
     }
@@ -236,47 +236,6 @@ def --env fuck [] {
         nu /tmp/fuck.nu;
         rm /tmp/fuck.nu;
     }
-}
-
-def --env cve [
-  --ticket (-t): string # Override ticket number
-] {
-    if (not ("gradlew" | path exists)) {
-        error make {
-           msg: "Not in project root"
-        };
-    }
-    let ticketNumber = if ($ticket | is-empty) {
-        git branch --show-current 
-            | parse -r "(?<ticket>EAC-\\d+)" 
-            | get ticket.0;
-    } else {
-        if ($ticket | str starts-with "EAC") {
-            $ticket;
-        } else {
-            $"EAC-($ticket)";
-        }
-    }
-    
-    print $"Description of ticket ($ticketNumber):";
-    let description = (input);
-
-    if (($description | is-empty) or ($description == "exit")) {
-    } else {
-
-        let history = {
-            id: $ticketNumber,
-            date: (date now | format date "%Y-%m-%d"),
-            tags: [],
-            changeDesc: $description
-        };
-
-        echo (["history" (date now | format date "%Y") (date now | format date "%m") $"($ticketNumber).json"] | path join);
-
-        $history 
-            | save (["history" (date now | format date "%Y") (date now | format date "%m") $"($ticketNumber).json"] | path join);
-    }
-
 }
 
 def --env hidehost [
