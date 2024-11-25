@@ -11,9 +11,32 @@ def create_left_prompt [] {
     if (($env | get "OBFUSCATE_HOST" -i) == "true") {
         $host = ($host | str replace -ar "." "#")
     }
+
+    let isGit = (do -i {git rev-parse --is-inside-work-tree} | complete | get stdout | str trim) == "true"
+
+    let path = ((ansi lcb) + (createPath $isGit))
+
+    let userhost = ($"(ansi lyb)($user)@($host)")
+
+    let topLine = $"(ansi wb)╭─╴($userhost) (ansi ly)($path)(ansi white) " + (create_git $isGit) + " " + (createDDev)
+    let bottomLine = $"(ansi wb)╰─"
+
+    $"($topLine)\n($bottomLine)"
+}
+
+def createPath [isGit: bool] {
     let dirPath = ($env.PWD | str replace $env.HOME "~" )
 
-    let pathSegments = if ($env | columns | any {|$it| $it == "PROMPT_PATH_SEGMENTS"}) {$env.PROMPT_PATH_SEGMENTS} else {3}
+    mut pathSegments = if ($env | columns | any {|$it| $it == "PROMPT_PATH_SEGMENTS"}) {$env.PROMPT_PATH_SEGMENTS} else {3}
+
+    let rootPath = (getRootFolder $isGit)
+
+    let specialSegment = if ($rootPath != null and ($dirPath | path relative-to $rootPath | path split | length) > 3) {
+        $pathSegments = $pathSegments - 1
+        $rootPath | path basename
+    } else {
+        null
+    }
 
     let splittedPath = ($dirPath | split row "/" )
     let path = ($splittedPath | last $pathSegments | str join "/")
@@ -28,16 +51,23 @@ def create_left_prompt [] {
 
     let path = if ($splittedPath | length) > $pathSegments {
         "⇜" + $path
-    } else {$path}
+    } else {
+        $path
+    }
 
-    let path = ((ansi lcb) + $path)
+    if ($specialSegment != null) {
+        "⇜/" + $specialSegment + "/" + $path
+    } else {
+        $path
+    }
+}
 
-    let userhost = ($"(ansi lyb)($user)@($host)")
-
-    let topLine = $"(ansi wb)╭─╴($userhost) (ansi ly)($path)(ansi white) " + (create_git) + " " + (createDDev)
-    let bottomLine = $"(ansi wb)╰─"
-
-    $"($topLine)\n($bottomLine)"
+def getRootFolder [$isGit] {
+    if ($isGit) {
+        git rev-parse --show-toplevel
+    } else {
+        null
+    }
 }
 
 def createDDev [] {
@@ -66,9 +96,8 @@ def createDDev [] {
     $out
 }
 
-def create_git [] {
-    let isGit = (do -i {git rev-parse --is-inside-work-tree} | complete | get stdout | str trim)
-    let out = if ($isGit == "true") {
+def create_git [isGit: bool] {
+    let out = if ($isGit) {
         let branch = (git branch --show-current | str trim)
         let diffIndex = (do -i {git diff-index --cached HEAD} | complete | get stdout | str trim)
         let stagedChanges = ($diffIndex != "")
