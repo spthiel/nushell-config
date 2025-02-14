@@ -148,12 +148,12 @@ def convertcolor [$color] {
     if ($converted | is-empty) {
         $color | into string;
     } else {
-        $converted | str substring 2,-1;
+        $converted | str substring 2..-1;
     }
 }
 
 def grablscolors [] {
-    let lscolors = (open (ls ($nu.config-path | path dirname | path join "lscolors.*") | get 0.name));
+    let lscolors = (open (glob ($nu.config-path | path dirname | path join "lscolors.*") | get 0));
     let transposed = ($lscolors | transpose key value | update value {|c| convertcolor $c.value});
     $transposed | each {|it| $it.key + "=" + $it.value} | str join ":";
 }
